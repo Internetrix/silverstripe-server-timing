@@ -2,8 +2,8 @@
   "name": "internetrix/silverstripe-server-timing",
   "description": "Add server-timing information to headers",
   "type": "silverstripe-vendormodule",
-  "homepage": "https://gitlab.internetrix.net/silverstripe-modules/template",
-  "keywords": ["silverstripe", "module", "template"],
+  "homepage": "https://www.internetrix.com.au/",
+  "keywords": ["silverstripe", "server timings", "metrics", "timing", "timing metrics", "timing events"],
   "authors": [
     {
       "name": "Jon Su",
@@ -22,15 +22,11 @@
     "squizlabs/php_codesniffer": "^3.0"
   },
   "extra": {
-    "installer-name": "template",
-    "expose": [
-      "css",
-      "javascript"
-    ]
+    "installer-name": "template"
   },
   "autoload": {
     "psr-4": {
-      "Internetrix\\ServerTiming\\": "src/",
+      "Internetrix\\ServerTiming\\": "src/"
     }
   },
   "license": "BSD-3-Clause",

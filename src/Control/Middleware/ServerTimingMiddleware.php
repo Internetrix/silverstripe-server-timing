@@ -1,21 +1,40 @@
+
 <?php
 
-namespace Internetrix\LawCompliance\Middleware;
+namespace Internetrix\ServerTiming\Control\Middleware;
+
+/* Copyright 2020 Internetrix
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+version 2 as published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details. */
 
 use SilverStripe\Control\Middleware\HTTPMiddleware;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Control\HTTPResponse;
-use SilverStripe\Dev\Debug;
-
+use Internetrix\ServerTiming\Helper\ServerTiming;
 /**
  * Class ServerTimingMiddleware
- * @package Internetrix\CMSAdminIPRestriction
+ * @package Internetrix\ServerTiming
  */
 class ServerTimingMiddleware implements HTTPMiddleware
 {
+    /* @var ServerTiming Static instance used to record metric events */
     protected $timing;
-    protected $start;
 
+    /**
+     * ServerTimingMiddleware constructor.
+     * @param ServerTiming $timing
+     */
+    public function __construct(ServerTiming $timing)
+    {
+        $this->timing = $timing;
+    }
 
     /**
      * @param HTTPRequest $request
@@ -24,42 +43,34 @@ class ServerTimingMiddleware implements HTTPMiddleware
      */
     public function process(HTTPRequest $request, callable $delegate)
     {
+        // Time it took for this middleware to be called
+        $this->timing->addMetric('Bootstrap');
 
-        $this->timing = new ServerTiming();
-
-        $this->timing->start('bootstrap');
-        $this->timing->end('bootstrap');
-//
-
-        $this->timing->start('app');
-
-//        // If you want normal behaviour to occur, make sure you call $delegate($request)
+        // Time to get finish response from within application
+        $this->timing::start('Application');
         $response = $delegate($request);
+        $this->timing::end('Application');
 
-        $this->timing->end('app');
+        // Total time it took to send out a response back to the client-side
+        $this->timing->addMetric('Total');
 
-        $this->timing->setDuration('Total');
-
+        // Add Server-Timing API
         $response->addHeader('Server-Timing', $this->generateHeaders());
-
 
         return $response;
     }
 
-    public function getRequestStartTime()
-    {
-        return $_SERVER["REQUEST_TIME_FLOAT"] ?? microtime(true);
-    }
-
+    /**
+     * Generates the ServerTiming API Headers to add to the request response
+     * @return string
+     */
     public function generateHeaders()
     {
         $metrics = [];
 
         if (count($this->timing->getEvents())) {
             foreach($this->timing->getEvents() as $name => $timeTaken) {
-                $output = sprintf('%s;desc="%s";dur=%f', $name, $name, $timeTaken);
-
-                $metrics[] = $output;
+                $metrics[] = sprintf('%s;desc="%s";dur=%f', $name, $name, $timeTaken);
             }
         }
 
