@@ -1,4 +1,3 @@
-
 <?php
 
 namespace Internetrix\ServerTiming\Control\Middleware;
